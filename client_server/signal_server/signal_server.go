@@ -81,7 +81,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 	var curUser *User
-	firstMessage := true
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {
@@ -93,7 +92,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Printf("recv: %s", message)
 		req := &Request{}
-		json.Unmarshal(message, req)
+		if err = json.Unmarshal(message, req); err != nil {
+			log.Println("unmarshal failed:", err)
+			continue
+		}
 		log.Printf("req:%s\n", req)
 
 		if curUser == nil {
@@ -103,20 +105,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			curUser.Msgs = append(curUser.Msgs, message)
 		}
 		for userName, user := range curUser.Room.Users {
-			if userName != req.UserName {
-				if req.Type != "login" {
-					log.Printf("send currrent msg to user:%s, message:%s\n", userName, message)
-					user.Conn.WriteMessage(websocket.TextMessage, message)
+			if userName == req.UserName {
+				continue
+			}
+			if req.Type == "login" {
+				for _, msg := range user.Msgs {
+					log.Printf("send cached msg to current user:%s, messge:%s\n", curUser.UserName, msg)
+					c.WriteMessage(websocket.TextMessage, msg)
 				}
-				if firstMessage {
-					for _, msg := range user.Msgs {
-						log.Printf("send cached msg to current user:%s, messge:%s\n", curUser.UserName, msg)
-						c.WriteMessage(websocket.TextMessage, msg)
-					}
-				}
+			} else {
+				log.Printf("send currrent msg to user:%s, message:%s\n", userName, message)
+				user.Conn.WriteMessage(websocket.TextMessage, message)
 			}
 		}
-		firstMessage = false
 	}
 }
 

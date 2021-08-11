@@ -2,7 +2,7 @@ import SignalChannel from "./signal_channel.js"
 
 let clientName = "client"
 let serverName = "server"
-let roomId = Date.now()
+let roomId = Date.now().toString()
 console.log(`roomId:${roomId}`)
 
 const constraints = window.constraints = {
