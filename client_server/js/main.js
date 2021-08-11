@@ -82,7 +82,7 @@ function onIceCandidate(ctx, event) {
 
 function onIceStateChange(ctx, event) {
   console.log(`[${ctx.userName}] ICE state: ${ctx.pc.iceConnectionState}`);
-  console.log(`[${ctx.userName}] ICE state change event: ${event}`);
+  console.log(`[${ctx.userName}] ICE state change event:`, event);
 }
 
 async function onRemoteSdp(ctx, msg) {
